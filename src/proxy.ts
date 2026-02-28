@@ -22,6 +22,13 @@ const saveLimiter = new Ratelimit({
   prefix: 'rl:save',
 })
 
+// 혹시 신고 도배가 들어올 수 있으니 엄격하게 제한함
+const reportLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, '1 h'),
+  prefix: 'rl:report',
+})
+
 export async function proxy(request: NextRequest) {
   if (request.method !== 'POST') return NextResponse.next()
 
@@ -30,7 +37,9 @@ export async function proxy(request: NextRequest) {
           ?? 'anonymous'
 
   const path = request.nextUrl.pathname
-  const limiter = path.includes('/analyze') ? analyzeLimiter : saveLimiter
+  const limiter = path.includes('/analyze') ? analyzeLimiter
+                : path.includes('/reports') ? reportLimiter
+                : saveLimiter
 
   const { success, remaining, reset } = await limiter.limit(ip)
 

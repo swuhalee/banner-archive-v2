@@ -9,14 +9,14 @@ export const bannerStatusEnum = pgEnum('banner_status', [
     'deleted',
 ])
 
-export const appealReasonTypeEnum = pgEnum('appeal_reason_type', [
+export const reportReasonTypeEnum = pgEnum('appeal_reason_type', [
     'privacy',
     'portrait',
     'false_info',
     'other',
 ])
 
-export const appealStatusEnum = pgEnum('appeal_status', [
+export const reportStatusEnum = pgEnum('appeal_status', [
     'received',
     'under_review',
     'actioned',
@@ -67,14 +67,14 @@ export const images = pgTable('images', {
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-export const appeals = pgTable('appeals', {
+export const reports = pgTable('reports', {
     id: uuid('id').primaryKey().notNull().default(sql`gen_random_uuid()`),
     bannerId: uuid('banner_id')
         .notNull()
         .references(() => banners.id, { onDelete: 'cascade' }),
-    reasonType: appealReasonTypeEnum('reason_type').notNull(),
+    reasonType: reportReasonTypeEnum('reason_type').notNull(),
     reasonDetail: text('reason_detail'),
-    status: appealStatusEnum('status').notNull().default('received'),
+    status: reportStatusEnum('status').notNull().default('received'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
