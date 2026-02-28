@@ -2,6 +2,8 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { ApiErrorCode } from '@/src/type/api'
+import { formatDuration } from '@/src/utils/time/formatDuration'
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -33,9 +35,15 @@ export async function proxy(request: NextRequest) {
   const { success, remaining, reset } = await limiter.limit(ip)
 
   if (!success) {
-    const retryAfter = Math.ceil((reset - Date.now()) / 1000)
+    const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000))
     return NextResponse.json(
-      { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+      {
+        success: false,
+        error: {
+          code: ApiErrorCode.RATE_LIMITED,
+          message: `요청이 너무 많습니다. ${formatDuration(retryAfter)} 후 다시 시도해주세요.`,
+        },
+      },
       {
         status: 429,
         headers: {
