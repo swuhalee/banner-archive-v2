@@ -53,7 +53,7 @@ const ReportModal = ({ bannerId, open, onClose }: ReportModalProps) => {
                 onClose={handleClose}
                 maxWidth="xs"
                 fullWidth
-                slotProps={{ paper: { sx: { borderRadius: '14px', bgcolor: 'var(--surface)', m: 2 } } }}
+                slotProps={{ paper: { sx: { bgcolor: 'var(--surface)', m: 2 } } }}
             >
                 <DialogContent sx={{ p: 3 }}>
                     <h2 className="mb-1 font-bold">신고</h2>

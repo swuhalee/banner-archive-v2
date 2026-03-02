@@ -3,6 +3,9 @@
 import { useRef, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
@@ -96,9 +99,18 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
 
   return (
     <>
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      {/* 이미지 분석 중일 때는 모달이 닫히지 않게 undefined 전달함 */}
+      <Dialog open={open} onClose={activeStep === 1 ? undefined : handleClose} maxWidth="md" fullWidth slotProps={{ paper: { sx: { m: { xs: 0, sm: 2 }, width: { xs: '100%', sm: undefined }, maxHeight: { xs: '100dvh', sm: undefined }, borderRadius: { xs: 0, sm: undefined } } } }}>
         <DialogContent sx={{ p: 3 }}>
-          <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
+          <Stepper
+            activeStep={activeStep}
+            sx={{
+              mb: 3,
+              '& .MuiStepIcon-root': { fontSize: { xs: 18, sm: 24 } },
+              '& .MuiStepLabel-label': { fontSize: { xs: 13, sm: 14 } },
+              '& .MuiStepConnector-line': { borderTopWidth: { xs: 1, sm: 1 } },
+            }}
+          >
             {STEPS.map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>

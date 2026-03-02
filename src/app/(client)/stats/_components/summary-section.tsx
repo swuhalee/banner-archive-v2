@@ -73,13 +73,13 @@ export default function SummarySection({ scope, onClose }: Props) {
 
       {data && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="stat-cards">
             <StatCard label="현수막 수" value={data.totalBanners} />
             <StatCard label="총 관측 횟수" value={data.totalObservations} />
             <StatCard label="등록 지역" value={`${data.regionCount}곳`} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 20, alignItems: 'start' }}>
+          <div className="stats-trend-row">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)' }}>
                 월별 등록 추이 <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(최근 12개월)</span>
@@ -87,7 +87,7 @@ export default function SummarySection({ scope, onClose }: Props) {
               <MonthlyTrend data={data.monthlyTrend} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)' }}>
                 주체 유형 분포
               </span>

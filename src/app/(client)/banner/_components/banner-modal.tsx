@@ -5,6 +5,7 @@ import { useState, type MouseEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
 import IconButton from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
@@ -50,17 +51,14 @@ export default function BannerModal({ bannerId, open, onClose }: BannerModalProp
         }}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: '16px', bgcolor: 'var(--surface)', m: 2 } } }}
+        slotProps={{ paper: { sx: { bgcolor: 'var(--surface)', m: 2 } } }}
       >
-        <DialogContent sx={{ p: 0, position: 'relative' }}>
-          <IconButton
-            onClick={onClose}
-            size="small"
-            sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1, bgcolor: 'rgba(0,0,0,0.3)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.5)' } }}
-            aria-label="닫기"
-          >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'flex-end', p: 0.5 }}>
+          <IconButton onClick={onClose} size="small" aria-label="닫기">
             <CloseIcon fontSize="small" />
           </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
 
           {isLoading && (
             <p className="p-6 text-center text-sm text-(--text-muted)">불러오는 중...</p>
@@ -68,7 +66,7 @@ export default function BannerModal({ bannerId, open, onClose }: BannerModalProp
 
           {banner && (
             <>
-              <section className="overflow-hidden rounded-t-2xl bg-(--surface-alt)">
+              <section className="overflow-hidden bg-(--surface-alt)">
                 {banner.imageUrl && (
                   <Image
                     src={banner.imageUrl}

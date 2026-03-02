@@ -13,12 +13,12 @@ export default function Page() {
         현수막은 사라지지만,<br />기록은 남습니다
       </h1>
 
-      <p style={{ marginTop: '24px', fontSize: '16px', lineHeight: 1.8, color: 'var(--text-muted)' }}>
+      <p style={{ marginTop: '24px', fontSize: '14px', lineHeight: 1.8, color: 'var(--text-muted)' }}>
         공공장소에 걸리는 정치 현수막은 수일 만에 교체되거나 철거됩니다.
         그 안에 담긴 메시지—약속, 주장, 때로는 혐오—는 흔적 없이 사라집니다.
       </p>
 
-      <p style={{ marginTop: '8px', fontSize: '16px', lineHeight: 1.8, color: 'var(--text-muted)' }}>
+      <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: 1.8, color: 'var(--text-muted)' }}>
         우리는 그것을 기록합니다. 누가, 어디서, 무엇을 말했는지.
         시민이 직접 사진을 찍고 올리면 이 저장소가 영구히 보존합니다.
       </p>
