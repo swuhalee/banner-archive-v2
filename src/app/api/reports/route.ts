@@ -5,16 +5,16 @@ import { ApiErrorCode, ApiSuccessCode } from '@/src/type/api'
 import { CreateReportSchema } from '@/src/lib/validation/report'
 
 export async function POST(request: NextRequest) {
-    try {
-        const parsed = CreateReportSchema.safeParse(await request.json())
+  try {
+    const parsed = CreateReportSchema.safeParse(await request.json())
 
-        if (!parsed.success) {
-            return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.')
-        }
-
-        const report = await createReport(parsed.data)
-        return apiSuccess(report, ApiSuccessCode.CREATED, 201)
-    } catch (e) {
-        return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500)
+    if (!parsed.success) {
+      return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.')
     }
+
+    const report = await createReport(parsed.data)
+    return apiSuccess(report, ApiSuccessCode.CREATED, 201)
+  } catch (e) {
+    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500)
+  }
 }
