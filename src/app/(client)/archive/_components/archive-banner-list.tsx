@@ -75,11 +75,7 @@ export default function ArchiveBannerList() {
             {banners.map((banner) => (
               <PhotoCard
                 key={banner.id}
-                item={{
-                  id: banner.id,
-                  region: banner.regionText,
-                  image: banner.imageUrl ?? '',
-                }}
+                item={banner}
                 fromPath="/archive"
               />
             ))}
