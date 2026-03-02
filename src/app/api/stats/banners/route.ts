@@ -4,15 +4,7 @@ import db from '@/src/lib/db/db'
 import { banners, regions } from '@/src/lib/db/schema'
 import { apiSuccess, apiError } from '@/src/lib/api/response'
 import { ApiErrorCode } from '@/src/type/api'
-
-export type RegionLevel = 'sido' | 'sigungu' | 'eupmyeondong'
-
-export type RegionStat = {
-  region: string
-  count: number
-  lat: number | null
-  lng: number | null
-}
+import type { RegionLevel, RegionStat } from '@/src/type/stats'
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,7 +23,16 @@ export async function GET(request: NextRequest) {
         .groupBy(regions.sido)
         .orderBy(desc(count()))
 
-      return apiSuccess(rows satisfies RegionStat[])
+      const data: RegionStat[] = rows.map((r) => ({
+        region: r.region,
+        count: r.count,
+        lat: r.lat,
+        lng: r.lng,
+        sido: r.region,
+        sigungu: null,
+        eupmyeondong: null,
+      }))
+      return apiSuccess(data)
     }
 
     if (level === 'sigungu') {
@@ -48,6 +49,9 @@ export async function GET(request: NextRequest) {
         count: r.count,
         lat: r.lat,
         lng: r.lng,
+        sido: r.sido,
+        sigungu: r.sigungu,
+        eupmyeondong: null,
       }))
       return apiSuccess(data)
     }
@@ -66,10 +70,12 @@ export async function GET(request: NextRequest) {
       count: r.count,
       lat: r.lat,
       lng: r.lng,
+      sido: r.sido,
+      sigungu: r.sigungu,
+      eupmyeondong: r.eupmyeondong,
     }))
     return apiSuccess(data)
   } catch (e) {
-    const message = e instanceof Error ? e.message : '서버 오류가 발생했습니다.'
-    return apiError(ApiErrorCode.INTERNAL_ERROR, message, 500)
+    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500)
   }
 }
