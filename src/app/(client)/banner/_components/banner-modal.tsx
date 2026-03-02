@@ -20,7 +20,7 @@ type BannerModalProps = {
   onClose: () => void
 }
 
-function formatKoreanDate(date: Date | string): string {
+function formatDate(date: Date | string): string {
   const d = new Date(date)
   return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`
 }
@@ -138,10 +138,10 @@ export default function BannerModal({ bannerId, open, onClose }: BannerModalProp
 
                 <div className="grid gap-2">
                   <div className="flex items-center gap-2.5 text-[12px] text-(--text-muted)">
-                    <span>{formatKoreanDate(banner.firstSeenAt)}에 최초 관측됨</span>
+                    <span>{formatDate(banner.firstSeenAt)}에 최초 관측됨</span>
                   </div>
                   <div className="flex items-center gap-2.5 text-[12px] text-(--text-muted)">
-                    <span>가장 최근인 {formatKoreanDate(banner.lastSeenAt)}에도 관측됨</span>
+                    <span>가장 최근인 {formatDate(banner.lastSeenAt)}에도 관측됨</span>
                   </div>
                   <div className="flex items-center gap-2.5 text-[12px] text-(--text-muted)">
                     <span>현재까지 총 {banner.observedCount}회 관측됨</span>

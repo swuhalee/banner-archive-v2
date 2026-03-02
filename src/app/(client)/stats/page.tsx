@@ -1,11 +1,10 @@
-import React from 'react'
+import BannerMap from './_components/banner-map.client'
 
-const Page = () => {
+export default function Page() {
   return (
-    <div>
-      통계 페이지
+    <div className="stack-lg">
+      <h1 style={{ fontSize: 22, fontWeight: 700 }}>지역별 현수막 현황</h1>
+      <BannerMap />
     </div>
   )
 }
-
-export default Page
