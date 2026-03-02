@@ -220,6 +220,7 @@ div.report-dialog {
 }
 
 @media (min-width: 1280px) {
+
   .upload-modal,
   .detail-modal {
     width: min(1120px, calc(100vw - 240px));
@@ -247,13 +248,11 @@ div.report-dialog {
   left: -120px;
   width: 120px;
   pointer-events: none;
-  background: linear-gradient(
-      90deg,
+  background: linear-gradient(90deg,
       transparent,
       rgba(255, 255, 255, 1) 50%,
-      transparent
-    );
-  filter: blur(8px);  
+      transparent);
+  filter: blur(8px);
   animation: banner-scan-h 2s ease-in-out infinite alternate;
 }
 
@@ -286,5 +285,17 @@ div.report-dialog {
     width: 100vw;
     height: auto;
     max-height: 100dvh;
+  }
+}
+
+@keyframes summary-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import type { RegionLevel, RegionStat } from '@/src/app/api/stats/banners/route'
+import type { RegionLevel, RegionStat } from '@/src/type/stats'
 import type { ApiResponse } from '@/src/type/api'
 
 async function fetchBannerStats(level: RegionLevel): Promise<RegionStat[]> {

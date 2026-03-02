@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-import type { RegionLevel } from '@/src/app/api/stats/banners/route'
+import type { RegionLevel, SummaryScope } from '@/src/type/stats'
 import { useGetBannerStats } from '../_hooks/useGetBannerStats'
 
 // zoom 레벨에 따른 지역 단계 결정
@@ -13,14 +13,14 @@ function resolveLevel(zoom: number): RegionLevel {
   return 'eupmyeondong'
 }
 
-// zoom 레벨 한국어 표시
+// zoom 레벨 표시
 const LEVEL_LABEL: Record<RegionLevel, string> = {
   sido: '시 / 도',
   sigungu: '시 / 군 / 구',
   eupmyeondong: '읍 / 면 / 동',
 }
 
-// 버블 반지름 계산 (px) - sqrt 스케일로 면적이 비례하도록
+// 버블 반지름 계산(px) - sqrt 스케일로 면적이 비례하도록
 function bubbleRadius(count: number, maxCount: number, level: RegionLevel): number {
   const ratio = Math.sqrt(count / Math.max(maxCount, 1))
   const [minR, maxR] =
@@ -28,7 +28,7 @@ function bubbleRadius(count: number, maxCount: number, level: RegionLevel): numb
   return minR + (maxR - minR) * ratio
 }
 
-// 색상 (5단계 회색 계열 - 정치적 중립)
+// 색상 (5단계 회색 계열)
 const GRAY_STEPS = ['#d4d4d4', '#a3a3a3', '#737373', '#404040', '#171717']
 
 function bubbleColor(count: number, maxCount: number): string {
@@ -44,7 +44,15 @@ function ZoomTracker({ onChange }: { onChange: (level: RegionLevel) => void }) {
   return null
 }
 
-export default function BannerMap() {
+type BannerMapProps = {
+  // SummaryScope는 null(= 전국/선택 없음)을 타입에 포함하지만, 콜백은 마커를 클릭했을 때만 호출되므로 null을 넘길 일이 없음
+  // SummaryScope에서 null을 제거하면 이를 사용하는 모든 곳(useState 초기값, API 파라미터 등)에 '| null'을 일일이 붙여야 하므로,
+  // SummaryScope에 null을 유지하고 여기서만 NonNullable로 좁혀 null을 제거함
+  onSelectRegion?: (region: NonNullable<SummaryScope>) => void
+  selectedRegion?: SummaryScope
+}
+
+export default function BannerMap({ onSelectRegion, selectedRegion }: BannerMapProps) {
   const [level, setLevel] = useState<RegionLevel>('sido')
   const { data: stats = [], isFetching, error } = useGetBannerStats(level)
   const loading = isFetching
@@ -117,6 +125,9 @@ export default function BannerMap() {
         {markers.map(({ stat, coords }) => {
           const r = bubbleRadius(stat.count, maxCount, level)
           const fill = bubbleColor(stat.count, maxCount)
+          const isSelected =
+            selectedRegion?.sido === stat.sido &&
+            (selectedRegion?.sigungu ?? null) === (stat.sigungu ?? null)
           return (
             <CircleMarker
               key={stat.region}
@@ -125,9 +136,23 @@ export default function BannerMap() {
               pathOptions={{
                 fillColor: fill,
                 fillOpacity: 0.75,
-                color: '#333',
-                weight: 1,
+                color: isSelected ? '#f97316' : '#333',
+                weight: isSelected ? 2.5 : 1,
               }}
+              eventHandlers={
+                onSelectRegion
+                  ? {
+                      click: () => {
+                        onSelectRegion({
+                          name: stat.region,
+                          sido: stat.sido,
+                          sigungu: stat.sigungu ?? undefined,
+                          eupmyeondong: stat.eupmyeondong ?? undefined,
+                        })
+                      },
+                    }
+                  : undefined
+              }
             >
               <Tooltip direction="top" offset={[0, -r]} opacity={1}>
                 <div style={{ fontSize: 13, fontWeight: 600, minWidth: 80 }}>
