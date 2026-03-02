@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import Stepper from '@mui/material/Stepper';
@@ -30,29 +30,54 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
   // 분석 결과 (Step 2에서 사용)
   const [reviewCandidates, setReviewCandidates] = useState<CandidateBanner[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [analysisFailed, setAnalysisFailed] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const previewUrlRef = useRef<string | null>(null);
+  const savedFormData = useRef<FormValues | null>(null);
+
+  function revokePreviewUrl() {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  }
 
   function handleClose() {
     onClose();
     setTimeout(() => {
+      revokePreviewUrl();
+      setPreviewUrl(null);
       setActiveStep(0);
+      setAnalysisFailed(false);
       setReviewCandidates([]);
     }, 300);
   }
 
   // Step 0 → Step 1: 폼 제출 후 AI 분석 시작
   async function handleFormSubmit(data: FormValues) {
-    if (data.imageFile) setPreviewUrl(URL.createObjectURL(data.imageFile));
+    savedFormData.current = data;
+    revokePreviewUrl();
+    if (data.imageFile) {
+      const url = URL.createObjectURL(data.imageFile);
+      previewUrlRef.current = url;
+      setPreviewUrl(url);
+    }
     setActiveStep(1);
+    setAnalysisFailed(false);
     try {
       const candidates = await analyze(data);
       setReviewCandidates(candidates);
       setActiveStep(2);
     } catch (error) {
-      setActiveStep(0);
+      setAnalysisFailed(true);
       setErrorMessage(error instanceof Error ? error.message : '분석에 실패했습니다.');
     }
+  }
+
+  async function handleRetry() {
+    if (savedFormData.current) await handleFormSubmit(savedFormData.current);
   }
 
   // Step 2 → 저장
@@ -87,8 +112,14 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
           )}
 
           {/* Step 1: AI 분석 로딩 */}
-          {activeStep === 1 && previewUrl && (
+          {activeStep === 1 && !analysisFailed && previewUrl && (
             <AnalysisLoading imageUrl={previewUrl} />
+          )}
+          {activeStep === 1 && analysisFailed && (
+            <div className="flex flex-col items-center gap-4 py-10">
+              <p className="text-sm text-(--text-muted)">분석에 실패했습니다. 다시 시도해주세요.</p>
+              <button className="btn btn-solid" onClick={handleRetry}>다시 시도</button>
+            </div>
           )}
 
           {/* Step 2: 분석 결과 확인 */}
