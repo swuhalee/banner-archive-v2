@@ -11,10 +11,13 @@ type CandidateCardProps = {
 const CandidateCard = ({ index, data, onChange }: CandidateCardProps) => {
   return (
     <div
-      className="grid gap-0 rounded-xl border border-(--line) overflow-hidden"
-      style={{ opacity: data.excluded ? 0.45 : 1 }}
+      className={`grid gap-0 rounded-xl border border-(--line) overflow-hidden ${data.excluded ? 'opacity-[0.45]' : ''}`}
     >
       {/* 사진 */}
+      {/*
+       * Next.js Image는 Blob URL(URL.createObjectURL)을 지원하지 않아 <img>를 사용합니다.
+       * @see https://nextjs.org/docs/app/api-reference/components/image#src
+       */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={data.imageUrl}
@@ -26,8 +29,7 @@ const CandidateCard = ({ index, data, onChange }: CandidateCardProps) => {
         {/* 헤더 */}
         <div className="flex items-center gap-2">
           <span
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-            style={{ background: data.excluded ? 'var(--text-muted)' : '#111111' }}
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ${data.excluded ? 'bg-(--text-muted)' : 'bg-[#111111]'}`}
           >
             {index + 1}
           </span>
@@ -81,22 +83,12 @@ const CandidateCard = ({ index, data, onChange }: CandidateCardProps) => {
 
         <label className="grid gap-1 text-[12px] font-semibold text-(--text-muted)">
           위치
-          <input
-            type="text"
-            value={data.regionText}
-            readOnly
-            className="cursor-default"
-          />
+          <output className="cursor-default">{data.regionText}</output>
         </label>
 
         <label className="grid gap-1 text-[12px] font-semibold text-(--text-muted)">
           관측일
-          <input
-            type="date"
-            value={data.observedAt}
-            readOnly
-            className="cursor-default"
-          />
+          <output className="cursor-default">{data.observedAt}</output>
         </label>
       </div>
     </div>

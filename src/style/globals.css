@@ -96,6 +96,7 @@ input[type="radio"] {
 }
 
 input:not([type="checkbox"]):not([type="radio"]),
+output,
 select,
 textarea {
   width: 100%;
@@ -106,6 +107,11 @@ textarea {
   background: #fff;
   color: var(--text);
   font: 400 14px/1.4 var(--font-geist-sans), sans-serif;
+}
+
+output {
+  display: flex;
+  align-items: center;
 }
 
 textarea {

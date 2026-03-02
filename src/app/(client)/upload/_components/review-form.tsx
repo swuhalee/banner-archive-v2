@@ -37,8 +37,10 @@ const ReviewForm = ({ candidates: initialCandidates, isSaving, onSave }: ReviewF
 
       <div className="flex items-center justify-between border-t border-(--line) pt-3">
         <span className="text-[13px] text-(--text-muted)">
-          {activeCount}개 저장 예정
-          {candidates.length !== activeCount && ` (${candidates.length - activeCount}개 제외)`}
+          {activeCount === 0
+            ? '저장할 현수막이 없습니다. 하나 이상 포함해주세요.'
+            : `${activeCount}개 저장 예정${candidates.length !== activeCount ? ` (${candidates.length - activeCount}개 제외)` : ''}`
+          }
         </span>
         <button
           className="btn btn-solid"
