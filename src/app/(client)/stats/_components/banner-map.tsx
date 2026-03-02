@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { RegionLevel } from '@/src/app/api/stats/banners/route'
-import { REGION_COORDS } from '@/src/utils/region/korea-coords'
 import { useGetBannerStats } from '../_hooks/useGetBannerStats'
 
 // zoom 레벨에 따른 지역 단계 결정
@@ -57,9 +56,8 @@ export default function BannerMap() {
   const markers = useMemo(
     () =>
       stats.flatMap((stat) => {
-        const coords = REGION_COORDS[stat.region]
-        if (!coords) return []
-        return [{ stat, coords }]
+        if (stat.lat == null || stat.lng == null) return []
+        return [{ stat, coords: [stat.lat, stat.lng] as [number, number] }]
       }),
     [stats]
   )

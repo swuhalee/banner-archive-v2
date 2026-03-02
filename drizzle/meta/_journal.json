@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1772272297951,
-      "tag": "0000_keen_captain_stacy",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1772273986472,
-      "tag": "0001_sharp_stature",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1772280860811,
-      "tag": "0002_amused_nova",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1772302529815,
-      "tag": "0003_fuzzy_arachne",
+      "when": 1772422733462,
+      "tag": "0000_flaky_amazoness",
       "breakpoints": true
     }
   ]

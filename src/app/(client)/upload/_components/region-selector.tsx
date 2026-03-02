@@ -1,65 +1,82 @@
-import { getChildren, getLevelPlaceholder, getSidoNodes } from '@/src/utils/region/korea-regions';
-import { useMemo } from 'react';
+'use client'
+
+import { useEffect, useState } from 'react'
+import { REGION_KIND_LABEL } from '@/src/type/region'
+import type { RegionKind } from '@/src/type/region'
+import type { RegionItem } from '@/src/app/api/regions/route'
 
 type RegionSelectorProps = {
-    value: string;
-    onChange: (regionText: string) => void;
-};
+    onChange: (regionText: string) => void
+}
 
-const RegionSelector = ({ value, onChange }: RegionSelectorProps) => {
-    const selectedPath = useMemo(() => {
-        const tokens = value.split(" ").map((token) => token.trim()).filter(Boolean);
-        const path: string[] = [];
-        let options = getSidoNodes();
+type LevelState = {
+    options: RegionItem[]
+    selected: RegionItem | null
+}
 
-        for (const token of tokens) {
-            const matched = options.find((option) => option.name === token);
-            if (!matched) break;
-            path.push(token);
-            options = matched.children;
+async function fetchChildren(parentId?: number): Promise<RegionItem[]> {
+    const url = parentId != null ? `/api/regions?parentId=${parentId}` : '/api/regions'
+    const res = await fetch(url)
+    const json = await res.json()
+    return json.data ?? []
+}
+
+function getLevelPlaceholder(options: RegionItem[], levelIndex: number): string {
+    if (levelIndex === 0) return '시 / 도 선택'
+    const kinds = [...new Set(options.map((o) => o.kind))]
+    return kinds.map((k) => REGION_KIND_LABEL[k as RegionKind] ?? k).join(' / ') + ' 선택'
+}
+
+const RegionSelector = ({ onChange }: RegionSelectorProps) => {
+    const [levels, setLevels] = useState<LevelState[]>([{ options: [], selected: null }])
+
+    useEffect(() => {
+        fetchChildren().then((options) => {
+            setLevels([{ options, selected: null }])
+        })
+    }, [])
+
+    async function handleSelect(levelIndex: number, selectedId: string) {
+        const item = levels[levelIndex].options.find((o) => String(o.id) === selectedId) ?? null
+
+        // 현재 레벨까지 잘라내고 선택값 반영
+        const next: LevelState[] = levels
+            .slice(0, levelIndex + 1)
+            .map((l, i) => (i === levelIndex ? { ...l, selected: item } : l))
+
+        if (item) {
+            onChange(item.fullPath)
+            const children = await fetchChildren(item.id)
+            if (children.length > 0) {
+                next.push({ options: children, selected: null })
+            }
+        } else {
+            // 선택 해제 시 부모 레벨의 fullPath로 복원
+            const parentItem = levelIndex > 0 ? next[levelIndex - 1]?.selected : null
+            onChange(parentItem?.fullPath ?? '')
         }
 
-        return path;
-    }, [value]);
-
-    const optionsByLevel = useMemo(() => {
-        const levels = [getSidoNodes()];
-        let depth = 1;
-        while (depth <= selectedPath.length) {
-            const parentPath = selectedPath.slice(0, depth);
-            if (parentPath.length !== depth || parentPath.some((value) => !value)) break;
-            const children = getChildren(parentPath);
-            if (children.length === 0) break;
-            levels.push(children);
-            depth += 1;
-        }
-        return levels;
-    }, [selectedPath]);
-
-    function handleLevelChange(level: number, nextValue: string) {
-        const nextPath = selectedPath.slice(0, level);
-        if (nextValue) nextPath[level] = nextValue;
-        onChange(nextPath.join(" "));
+        setLevels(next)
     }
 
     return (
         <div className="grid gap-2">
-            {optionsByLevel.map((options, level) => (
+            {levels.map((level, i) => (
                 <select
-                    key={level}
-                    value={selectedPath[level] ?? ""}
-                    onChange={(e) => handleLevelChange(level, e.target.value)}
+                    key={i}
+                    value={level.selected?.id ?? ''}
+                    onChange={(e) => handleSelect(i, e.target.value)}
                 >
-                    <option value="">{level === 0 ? "시 / 도 선택" : getLevelPlaceholder(options)}</option>
-                    {options.map((option) => (
-                        <option key={option.name} value={option.name}>
+                    <option value="">{getLevelPlaceholder(level.options, i)}</option>
+                    {level.options.map((option) => (
+                        <option key={option.id} value={option.id}>
                             {option.name}
                         </option>
                     ))}
                 </select>
             ))}
         </div>
-    );
-};
+    )
+}
 
-export default RegionSelector;
+export default RegionSelector

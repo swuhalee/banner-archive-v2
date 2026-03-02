@@ -1,6 +1,6 @@
 import { eq, and, ilike, sql, SQL, getTableColumns, asc, desc } from 'drizzle-orm';
 import db from '../db/db';
-import { banners, images } from '../db/schema';
+import { banners, images, regions } from '../db/schema';
 import type { CreateBannerInput, BannerListParams } from '../../type/banner';
 import { findDuplicateBannerId } from '../../utils/duplicate/jaccard';
 
@@ -65,25 +65,35 @@ export async function getBannerById(id: string) {
 
 export async function createBanner(input: CreateBannerInput, imageUrl?: string) {
     return db.transaction(async (tx) => {
+        // regionText로 regions 테이블에서 id 조회
+        const [region] = await tx
+            .select({ id: regions.id })
+            .from(regions)
+            .where(eq(regions.fullPath, input.regionText))
+            .limit(1)
+
+        const insertInput: CreateBannerInput = { ...input, regionId: region?.id ?? null }
+
         const regionBanners = await tx
             .select()
             .from(banners)
             .where(eq(banners.regionText, input.regionText));
 
-        const duplicateId = findDuplicateBannerId(input, regionBanners);
+        const duplicateId = findDuplicateBannerId(insertInput, regionBanners);
         if (duplicateId) {
             const [updated] = await tx
                 .update(banners)
                 .set({
                     lastSeenAt: input.firstSeenAt,
                     observedCount: sql`${banners.observedCount} + 1`,
+                    ...(insertInput.regionId != null ? { regionId: insertInput.regionId } : {}),
                 })
                 .where(eq(banners.id, duplicateId))
                 .returning();
             return { banner: updated, isDuplicate: true };
         }
 
-        const [banner] = await tx.insert(banners).values(input).returning();
+        const [banner] = await tx.insert(banners).values(insertInput).returning();
         if (imageUrl) {
             await tx.insert(images).values({ bannerId: banner.id, imageUrl });
         }

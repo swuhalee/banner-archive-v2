@@ -89,7 +89,7 @@ const UploadForm = ({ onSubmit }: UploadFormProps) => {
                         control={control}
                         rules={{ required: true }}
                         render={({ field }) => (
-                            <RegionSelector value={field.value} onChange={field.onChange} />
+                            <RegionSelector onChange={field.onChange} />
                         )}
                     />
                 </div>
