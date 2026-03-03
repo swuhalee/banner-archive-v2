@@ -1,12 +1,6 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { SUBJECT_TYPE_MAP } from "@/src/type/banner";
 import type { DetectedBanner, AnalysisResult, BlurRegion } from "@/src/type/analysis";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({
-  model: "gemini-3-flash-preview",
-  generationConfig: { responseMimeType: "application/json" },
-});
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 const PROMPT = `이 사진에서 보이는 모든 현수막을 감지하고, 개인정보 보호 대상(얼굴·번호판)도 감지하여 아래 JSON 형식으로만 응답하세요.
 
@@ -44,23 +38,35 @@ const PROMPT = `이 사진에서 보이는 모든 현수막을 감지하고, 개
 - privacyRegions.type: "face" (사람 얼굴) 또는 "licensePlate" (한국 차량 번호판)
 - 현수막이 없으면: { "banners": [], "privacyRegions": [] }`;
 
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 export async function analyzeImage(
   imageBuffer: Buffer,
   mimeType: string = "image/jpeg"
 ): Promise<AnalysisResult> {
-  const result = await model.generateContent([
-    {
-      inlineData: {
-        data: imageBuffer.toString("base64"),
-        mimeType,
+
+  const result = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    config: {
+      responseMimeType: "application/json",
+      thinkingConfig: {
+        // 사고 수준 최소화
+        thinkingLevel: ThinkingLevel.MINIMAL
       },
     },
-    PROMPT,
-  ]);
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: PROMPT },
+          { inlineData: { data: imageBuffer.toString("base64"), mimeType } },
+        ],
+      },
+    ],
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const raw: any = JSON.parse(result.response.text());
+  const raw: any = JSON.parse(result.text ?? "{}");
 
   const banners: DetectedBanner[] = (raw.banners ?? []).map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
