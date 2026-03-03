@@ -12,7 +12,7 @@ const redis = new Redis({
 
 const analyzeLimiter = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(5, '1 h'),
+  limiter: Ratelimit.slidingWindow(20, '1 h'),
   prefix: 'rl:analyze',
 })
 
@@ -51,6 +51,7 @@ export async function proxy(request: NextRequest) {
         error: {
           code: ApiErrorCode.RATE_LIMITED,
           message: `요청이 너무 많습니다. ${formatDuration(retryAfter)} 후 다시 시도해주세요.`,
+          description: `Rate limit exceeded. IP: ${ip}, path: ${path}, retryAfter: ${retryAfter}s`,
         },
       },
       {

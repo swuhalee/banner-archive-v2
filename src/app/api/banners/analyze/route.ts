@@ -16,11 +16,11 @@ export async function POST(request: NextRequest) {
     const rawRegionText = formData.get("regionText");
 
     if (!(file instanceof File)) {
-      return apiError(ApiErrorCode.BAD_REQUEST, "업로드된 사진이 없습니다.");
+      return apiError(ApiErrorCode.BAD_REQUEST, "업로드된 사진이 없습니다.", 400, 'Expected "image" form field to be a File instance');
     }
 
     if (rawRegionText !== null && typeof rawRegionText !== "string") {
-      return apiError(ApiErrorCode.BAD_REQUEST, "지역 정보가 올바르지 않습니다.");
+      return apiError(ApiErrorCode.BAD_REQUEST, "지역 정보가 올바르지 않습니다.", 400, '"regionText" must be a string if provided');
     }
 
     const regionText = rawRegionText;
@@ -68,6 +68,6 @@ export async function POST(request: NextRequest) {
   
     return apiSuccess(result);
   } catch (e) {
-    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500);
+    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500, e instanceof Error ? e.message : String(e));
   }
 }

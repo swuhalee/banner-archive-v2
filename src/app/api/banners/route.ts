@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const data = await getBanners(params)
     return apiSuccess(data)
   } catch (e) {
-    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500);
+    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500, e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const parsed = CreateBannerRequestSchema.safeParse(await request.json());
 
     if (!parsed.success) {
-      return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.');
+      return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400, JSON.stringify(parsed.error.issues));
     }
 
     // 이미지 업로드는 DB를 사용하지 않으므로 병렬 처리
@@ -78,6 +78,6 @@ export async function POST(request: NextRequest) {
     const hasDuplicate = results.some((r) => r.isDuplicate);
     return apiSuccess(results, hasDuplicate ? ApiSuccessCode.DUPLICATE : ApiSuccessCode.CREATED, 201);
   } catch (e) {
-    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500);
+    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500, e instanceof Error ? e.message : String(e));
   }
 }

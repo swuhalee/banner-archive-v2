@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const parentId = parentIdParam !== null ? Number(parentIdParam) : null
 
     if (parentIdParam !== null && (isNaN(parentId!) || parentId! <= 0)) {
-      return apiError(ApiErrorCode.BAD_REQUEST, '유효하지 않은 parentId입니다.')
+      return apiError(ApiErrorCode.BAD_REQUEST, '유효하지 않은 parentId입니다.', 400, `parentId must be a positive integer, received: "${parentIdParam}"`)
     }
 
     const rows = await db
@@ -39,6 +39,6 @@ export async function GET(request: NextRequest) {
 
     return apiSuccess(rows)
   } catch (e) {
-    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500)
+    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500, e instanceof Error ? e.message : String(e))
   }
 }

@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
     const sigungu = searchParams.get('sigungu') || null
     const eupmyeondong = searchParams.get('eupmyeondong') || null
 
-    if (sigungu && !sido) return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400)
-    if (eupmyeondong && !sigungu) return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400)
+    if (sigungu && !sido) return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400, '"sigungu" query param requires "sido" to be specified')
+    if (eupmyeondong && !sigungu) return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400, '"eupmyeondong" query param requires "sigungu" to be specified')
 
     const regionJoin = sido ? sql`INNER JOIN regions ON banners.region_id = regions.id` : sql``
     const sqlWhere = buildRegionSqlClause(sido, sigungu, eupmyeondong)
@@ -107,6 +107,6 @@ export async function GET(request: NextRequest) {
       monthlyTrend: trendRows.map((r) => ({ month: r.month, count: Number(r.count) })),
     })
   } catch (e) {
-    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500)
+    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500, e instanceof Error ? e.message : String(e))
   }
 }

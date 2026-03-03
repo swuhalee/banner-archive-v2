@@ -22,6 +22,7 @@ export type ApiError = {
   error: {
     code: ApiErrorCode;
     message: string;
+    description?: string;
   };
 };
 

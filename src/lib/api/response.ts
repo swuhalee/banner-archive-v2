@@ -14,6 +14,7 @@ export function apiError(
   code: ApiErrorCode,
   message: string,
   status = 400,
+  description?: string,
 ): NextResponse<ApiError> {
-  return NextResponse.json({ success: false, error: { code, message } }, { status });
+  return NextResponse.json({ success: false, error: { code, message, description } }, { status });
 }

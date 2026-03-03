@@ -76,6 +76,6 @@ export async function GET(request: NextRequest) {
     }))
     return apiSuccess(data)
   } catch (e) {
-    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500)
+    return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500, e instanceof Error ? e.message : String(e))
   }
 }
