@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const report = await createReport(parsed.data)
+    if (!report) return apiError(ApiErrorCode.BAD_REQUEST, '신고할 수 없는 현수막입니다.', 400)
     return apiSuccess(report, ApiSuccessCode.CREATED, 201)
   } catch (e) {
     return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500, e instanceof Error ? e.message : String(e))

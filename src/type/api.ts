@@ -7,6 +7,7 @@ export enum ApiSuccessCode {
 export enum ApiErrorCode {
   NOT_FOUND = 'NOT_FOUND',
   BAD_REQUEST = 'BAD_REQUEST',
+  UNAUTHORIZED = 'UNAUTHORIZED',
   INTERNAL_ERROR = 'INTERNAL_ERROR',
   RATE_LIMITED = 'RATE_LIMITED',
 }

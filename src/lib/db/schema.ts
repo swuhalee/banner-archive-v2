@@ -19,7 +19,7 @@ export const reportReasonTypeEnum = pgEnum('appeal_reason_type', [
 
 export const reportStatusEnum = pgEnum('appeal_status', [
     'received',
-    'under_review',
+    'on_hold',
     'actioned',
     'rejected',
 ])

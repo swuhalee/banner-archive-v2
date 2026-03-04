@@ -1,9 +1,11 @@
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { getIronSession } from 'iron-session'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { ApiErrorCode } from '@/src/type/api'
 import { formatDuration } from '@/src/utils/time/formatDuration'
+import { sessionOptions, type AdminSessionData } from '@/src/lib/auth/session'
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -29,7 +31,32 @@ const reportLimiter = new Ratelimit({
   prefix: 'rl:report',
 })
 
-export async function proxy(request: NextRequest) {
+async function handleAdmin(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  if (pathname === '/admin/login' || pathname === '/api/admin/auth/login') {
+    return NextResponse.next()
+  }
+
+  const response = NextResponse.next()
+  const session = await getIronSession<AdminSessionData>(request, response, sessionOptions)
+
+  if (!session.user) {
+    if (pathname.startsWith('/api/admin')) {
+      return NextResponse.json(
+        { success: false, error: { code: ApiErrorCode.UNAUTHORIZED, message: '인증이 필요합니다.' } },
+        { status: 401 }
+      )
+    }
+    const loginUrl = new URL('/admin/login', request.url)
+    loginUrl.searchParams.set('from', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  return response
+}
+
+async function handleApi(request: NextRequest) {
   if (request.method !== 'POST') return NextResponse.next()
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -69,6 +96,13 @@ export async function proxy(request: NextRequest) {
   return response
 }
 
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) return handleAdmin(request)
+  return handleApi(request)
+}
+
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/admin/:path*', '/api/:path*'],
 }
