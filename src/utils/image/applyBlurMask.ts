@@ -18,10 +18,10 @@ export async function applyBlurMask(
   for (const region of privacyRegions) {
     const { x, y, width, height } = region.bbox;
 
-    const left = Math.max(0, Math.round(x * imgW));
-    const top = Math.max(0, Math.round(y * imgH));
-    const right = Math.min(imgW, Math.round((x + width) * imgW));
-    const bottom = Math.min(imgH, Math.round((y + height) * imgH));
+    const left = Math.min(imgW, Math.max(0, Math.round(x * imgW)));
+    const top = Math.min(imgH, Math.max(0, Math.round(y * imgH)));
+    const right = Math.min(imgW, Math.max(0, Math.round((x + width) * imgW)));
+    const bottom = Math.min(imgH, Math.max(0, Math.round((y + height) * imgH)));
 
     const regionW = right - left;
     const regionH = bottom - top;

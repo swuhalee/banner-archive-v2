@@ -3,9 +3,6 @@
 import { useRef, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
@@ -24,6 +21,7 @@ type UploadModalProps = {
 };
 
 const STEPS = ['정보 입력', '분석', '결과 확인'];
+const EMPTY_ANALYSIS_MESSAGE = '현수막을 찾지 못했습니다. 다른 사진으로 다시 시도해주세요.';
 
 const UploadModal = ({ open, onClose }: UploadModalProps) => {
   const [activeStep, setActiveStep] = useState(0);
@@ -71,6 +69,11 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
     setAnalysisFailed(false);
     try {
       const candidates = await analyze(data);
+      if (candidates.length === 0) {
+        setErrorMessage(EMPTY_ANALYSIS_MESSAGE);
+        setTimeout(handleClose, 2000);
+        return;
+      }
       setReviewCandidates(candidates);
       setActiveStep(2);
     } catch (error) {
