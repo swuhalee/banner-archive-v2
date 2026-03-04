@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { toAdminPath } from '@/src/lib/auth/admin-path'
 
 const STATUS_TABS = [
   { value: '', label: '전체' },
@@ -20,7 +21,7 @@ export default function ReportTabNav({ status }: { status?: string }) {
         return (
           <Link
             key={value}
-            href={value ? `/admin/reports?status=${value}` : '/admin/reports'}
+            href={value ? `${toAdminPath('/reports')}?status=${value}` : toAdminPath('/reports')}
             style={{
               display: 'inline-block',
               padding: '8px 14px',

@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useLogout } from '../_hooks/useLogout'
+import { ADMIN_LOGIN_PATH, toAdminPath } from '@/src/lib/auth/admin-path'
 
 const navItems = [
-  { label: '대시보드', href: '/admin', exact: true },
-  { label: '신고 관리', href: '/admin/reports', exact: false },
+  { label: '대시보드', href: toAdminPath(), exact: true },
+  { label: '신고 관리', href: toAdminPath('/reports'), exact: false },
 ]
 
 export default function AdminNav() {
@@ -59,7 +60,7 @@ export default function AdminNav() {
       </div>
 
       <div style={{ padding: '12px 8px', borderTop: '1px solid var(--line)' }}>
-        <button className="btn btn-ghost" style={{ width: '100%' }} onClick={() => logout(undefined, { onSuccess: () => router.replace('/admin/login') })}>
+        <button className="btn btn-ghost" style={{ width: '100%' }} onClick={() => logout(undefined, { onSuccess: () => router.replace(ADMIN_LOGIN_PATH) })}>
           로그아웃
         </button>
       </div>

@@ -6,6 +6,7 @@ import type { NextRequest } from 'next/server'
 import { ApiErrorCode } from '@/src/type/api'
 import { formatDuration } from '@/src/utils/time/formatDuration'
 import { sessionOptions, type AdminSessionData } from '@/src/lib/auth/session'
+import { ADMIN_LOGIN_PATH, isAdminPublicPathname } from '@/src/lib/auth/admin-path'
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -33,8 +34,22 @@ const reportLimiter = new Ratelimit({
 
 async function handleAdmin(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const isAdminApiPath = pathname.startsWith('/api/admin')
+  const isDirectInternalAdminPath = pathname === '/admin' || pathname.startsWith('/admin/')
+  const isPublicAdminPath = isAdminPublicPathname(pathname)
 
-  if (pathname === '/admin/login' || pathname === '/api/admin/auth/login') {
+  if (!isAdminApiPath && !isDirectInternalAdminPath && !isPublicAdminPath) {
+    return NextResponse.next()
+  }
+
+  if (isDirectInternalAdminPath) {
+    return NextResponse.rewrite(new URL('/404', request.url))
+  }
+
+  if (
+    (isPublicAdminPath && pathname === ADMIN_LOGIN_PATH) ||
+    pathname === '/api/admin/auth/login'
+  ) {
     return NextResponse.next()
   }
 
@@ -42,13 +57,13 @@ async function handleAdmin(request: NextRequest) {
   const session = await getIronSession<AdminSessionData>(request, response, sessionOptions)
 
   if (!session.user) {
-    if (pathname.startsWith('/api/admin')) {
+    if (isAdminApiPath) {
       return NextResponse.json(
         { success: false, error: { code: ApiErrorCode.UNAUTHORIZED, message: '인증이 필요합니다.' } },
         { status: 401 }
       )
     }
-    const loginUrl = new URL('/admin/login', request.url)
+    const loginUrl = new URL(ADMIN_LOGIN_PATH, request.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
@@ -57,6 +72,7 @@ async function handleAdmin(request: NextRequest) {
 }
 
 async function handleApi(request: NextRequest) {
+  if (!request.nextUrl.pathname.startsWith('/api/')) return NextResponse.next()
   if (request.method !== 'POST') return NextResponse.next()
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -97,12 +113,12 @@ async function handleApi(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) return handleAdmin(request)
+  if (request.nextUrl.pathname.startsWith('/api/admin') || isAdminPublicPathname(request.nextUrl.pathname) || request.nextUrl.pathname.startsWith('/admin')) {
+    return handleAdmin(request)
+  }
   return handleApi(request)
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'],
 }

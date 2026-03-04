@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getAdminReportsByBanner } from '@/src/lib/api/report'
+import { toAdminPath } from '@/src/lib/auth/admin-path'
 import { STATUS_BADGE } from './_constants'
 import ReportTabNav from './_components/report-tab-nav'
 
@@ -127,7 +128,7 @@ export default async function Page({ searchParams }: PageProps) {
                   </td>
                   <td style={{ padding: '12px 14px' }}>
                     <Link
-                      href={`/admin/reports/${group.bannerId}`}
+                      href={toAdminPath(`/reports/${group.bannerId}`)}
                       className="btn btn-ghost"
                       style={{ height: 32, padding: '0 12px', fontSize: 13 }}
                     >
@@ -146,7 +147,7 @@ export default async function Page({ searchParams }: PageProps) {
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <Link
               key={p}
-              href={`/admin/reports?${status ? `status=${status}&` : ''}page=${p}`}
+              href={`${toAdminPath('/reports')}?${status ? `status=${status}&` : ''}page=${p}`}
               className={p === page ? 'btn btn-solid' : 'btn btn-ghost'}
               style={{ height: 34, padding: '0 12px', fontSize: 13 }}
             >

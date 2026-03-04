@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
 import { getAdminSession } from '@/src/lib/auth/session'
+import { ADMIN_LOGIN_PATH } from '@/src/lib/auth/admin-path'
 import AdminNav from './_components/admin-nav'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await getAdminSession()
   if (!session.user) {
-    redirect('/admin/login')
+    redirect(ADMIN_LOGIN_PATH)
   }
 
   return (

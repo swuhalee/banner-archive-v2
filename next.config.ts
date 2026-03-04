@@ -14,6 +14,21 @@ const envHostnames = [
   getHostname(process.env.SUPABASE_URL),
 ].filter((hostname): hostname is string => Boolean(hostname));
 
+function getAdminPublicPath(): string {
+  const rawPath = process.env.NEXT_PUBLIC_ADMIN_PATH?.trim()
+  if (!rawPath) return '/secret-dashboard'
+
+  const withLeadingSlash = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
+  const normalized = withLeadingSlash.length > 1
+    ? withLeadingSlash.replace(/\/+$/, '')
+    : withLeadingSlash
+
+  if (normalized === '/admin' || normalized === '/') return '/secret-dashboard'
+  return normalized
+}
+
+const adminPublicPath = getAdminPublicPath()
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -34,6 +49,12 @@ const nextConfig: NextConfig = {
         hostname,
       })),
     ],
+  },
+  async rewrites() {
+    return [
+      { source: adminPublicPath, destination: '/admin' },
+      { source: `${adminPublicPath}/:path*`, destination: '/admin/:path*' },
+    ]
   },
 };
 

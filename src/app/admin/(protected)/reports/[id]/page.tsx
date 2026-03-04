@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getAdminReportsByBannerId } from '@/src/lib/api/report'
+import { toAdminPath } from '@/src/lib/auth/admin-path'
 import { REASON_LABEL, STATUS_BADGE, BANNER_STATUS_BADGE } from '../_constants'
 import BannerActions from './_components/banner-actions'
 import ReportRowActions from './_components/report-row-actions'
@@ -22,7 +23,7 @@ export default async function Page({ params }: PageProps) {
   return (
     <div style={{ padding: 32 }}>
       <Link
-        href="/admin/reports"
+        href={toAdminPath('/reports')}
         style={{ display: 'inline-block', fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}
       >
         ← 신고 목록으로

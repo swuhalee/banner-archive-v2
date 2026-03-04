@@ -6,11 +6,13 @@ import { Suspense } from 'react'
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import { useLogin } from './_hooks/useLogin'
+import { ADMIN_PUBLIC_PATH } from '@/src/lib/auth/admin-path'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const from = searchParams.get('from') ?? '/admin'
+  const fromParam = searchParams.get('from')
+  const from = fromParam && fromParam.startsWith(ADMIN_PUBLIC_PATH) ? fromParam : ADMIN_PUBLIC_PATH
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -79,6 +81,7 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
+              placeholder="password"
             />
           </div>
           <button
