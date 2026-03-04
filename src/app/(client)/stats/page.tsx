@@ -5,7 +5,6 @@ export default function StatsPage() {
   return (
     <div className="stack-lg">
       <SummarySection scope={null} />
-
       <BannerMap />
     </div>
   )

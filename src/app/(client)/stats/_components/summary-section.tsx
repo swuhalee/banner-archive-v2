@@ -1,9 +1,11 @@
 'use client'
 
+import { useEffect } from 'react'
 import PlaceIcon from '@mui/icons-material/Place'
 import CloseIcon from '@mui/icons-material/Close'
 import type { SummaryScope } from '@/src/type/stats'
 import { useGetSummary } from '../_hooks/useGetSummary'
+import { useToast } from '@/src/providers/toast-provider'
 import StatCard from './stat-card'
 import MonthlyTrend from './monthly-trend'
 import HashtagTreemap from './hashtag-treemap'
@@ -17,9 +19,15 @@ type Props = {
 
 export default function SummarySection({ scope, onClose }: Props) {
   const { data, isFetching, error } = useGetSummary(scope)
+  const { showError } = useToast()
 
   const title = scope ? scope.name : '전국'
   const isPanel = scope !== null
+
+  useEffect(() => {
+    if (!error) return
+    showError(error instanceof Error ? error.message : '통계를 불러오지 못했습니다.')
+  }, [error, showError])
 
   return (
     <section
@@ -63,9 +71,9 @@ export default function SummarySection({ scope, onClose }: Props) {
         )}
       </div>
 
-      {error && (
-        <p style={{ color: '#ef4444', fontSize: 13, margin: 0 }}>
-          {error instanceof Error ? error.message : '오류가 발생했습니다.'}
+      {error && !data && !isFetching && (
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
+          데이터가 없습니다.
         </p>
       )}
 

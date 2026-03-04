@@ -6,14 +6,13 @@ import DialogContent from '@mui/material/DialogContent';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
 import UploadForm, { FormValues } from './upload-form';
 import ReviewForm from './review-form';
 import AnalysisLoading from './analysis-loading';
 import { useAnalyzeBanner } from '../_hooks/useAnalyzeBanner';
 import { useSaveBanners } from '../_hooks/useSaveBanners';
 import { CandidateBanner } from '@/src/type/banner';
+import { useToast } from '@/src/providers/toast-provider';
 
 type UploadModalProps = {
   open: boolean;
@@ -27,13 +26,12 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
   const [activeStep, setActiveStep] = useState(0);
   const { mutateAsync: analyze } = useAnalyzeBanner();
   const { mutateAsync: save, isPending: isSaving } = useSaveBanners();
+  const { showError, showSuccess } = useToast();
 
   // 분석 결과 (Step 2에서 사용)
   const [reviewCandidates, setReviewCandidates] = useState<CandidateBanner[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [analysisFailed, setAnalysisFailed] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const previewUrlRef = useRef<string | null>(null);
   const savedFormData = useRef<FormValues | null>(null);
@@ -70,7 +68,7 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
     try {
       const candidates = await analyze(data);
       if (candidates.length === 0) {
-        setErrorMessage(EMPTY_ANALYSIS_MESSAGE);
+        showError(EMPTY_ANALYSIS_MESSAGE);
         setTimeout(handleClose, 2000);
         return;
       }
@@ -78,7 +76,7 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
       setActiveStep(2);
     } catch (error) {
       setAnalysisFailed(true);
-      setErrorMessage(error instanceof Error ? error.message : '분석에 실패했습니다.');
+      showError(error instanceof Error ? error.message : '분석에 실패했습니다.');
     }
   }
 
@@ -90,13 +88,13 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
   async function handleSave(candidates: CandidateBanner[]) {
     try {
       const { hasDuplicate } = await save(candidates);
-      setSuccessMessage(hasDuplicate
+      showSuccess(hasDuplicate
         ? '이미 등록된 현수막이에요. 관측 정보를 업데이트했어요.'
         : '저장이 완료되었어요.'
       );
       setTimeout(handleClose, 1500);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '저장에 실패했습니다.');
+      showError(error instanceof Error ? error.message : '저장에 실패했습니다.');
     }
   }
 
@@ -148,27 +146,6 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
         </DialogContent>
       </Dialog>
 
-      <Snackbar
-        open={!!successMessage}
-        onClose={() => setSuccessMessage(null)}
-        autoHideDuration={4000}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="success" variant="filled" onClose={() => setSuccessMessage(null)}>
-          {successMessage}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={!!errorMessage}
-        onClose={() => setErrorMessage(null)}
-        autoHideDuration={4000}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="error" variant="filled" onClose={() => setErrorMessage(null)}>
-          {errorMessage}
-        </Alert>
-      </Snackbar>
     </>
   );
 };

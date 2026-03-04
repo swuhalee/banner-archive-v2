@@ -7,6 +7,7 @@ import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import theme from '@/src/style/theme'
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter'
+import { ToastProvider } from './toast-provider'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -25,7 +26,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <AppRouterCacheProvider>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </AppRouterCacheProvider>
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}

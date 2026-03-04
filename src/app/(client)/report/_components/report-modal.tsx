@@ -3,10 +3,9 @@
 import { useState } from 'react'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
-import Snackbar from '@mui/material/Snackbar'
-import Alert from '@mui/material/Alert'
 import { useSubmitReport } from '../_hooks/useSubmitReport'
 import { ReportReasonType, REASON_OPTIONS } from '@/src/type/report'
+import { useToast } from '@/src/providers/toast-provider'
 
 type ReportModalProps = {
     bannerId: string | null
@@ -17,8 +16,7 @@ type ReportModalProps = {
 const ReportModal = ({ bannerId, open, onClose }: ReportModalProps) => {
     const [reasonType, setReasonType] = useState<ReportReasonType | ''>('')
     const [reasonDetail, setReasonDetail] = useState('')
-    const [successMessage, setSuccessMessage] = useState<string | null>(null)
-    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const { showError, showSuccess } = useToast()
 
     const { mutate: submit, isPending } = useSubmitReport()
 
@@ -34,13 +32,13 @@ const ReportModal = ({ bannerId, open, onClose }: ReportModalProps) => {
             { bannerId, reasonType, reasonDetail: reasonDetail || null },
             {
                 onSuccess: () => {
-                    setSuccessMessage('신고가 접수되었습니다.')
+                    showSuccess('신고가 접수되었습니다.')
                     setReasonType('')
                     setReasonDetail('')
                     setTimeout(onClose, 1500)
                 },
                 onError: (error) => {
-                    setErrorMessage(error instanceof Error ? error.message : '신고 접수에 실패했습니다.')
+                    showError(error instanceof Error ? error.message : '신고 접수에 실패했습니다.')
                 },
             },
         )
@@ -108,27 +106,6 @@ const ReportModal = ({ bannerId, open, onClose }: ReportModalProps) => {
                 </DialogContent>
             </Dialog>
 
-            <Snackbar
-                open={!!successMessage}
-                onClose={() => setSuccessMessage(null)}
-                autoHideDuration={4000}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert severity="success" variant="filled" onClose={() => setSuccessMessage(null)}>
-                    {successMessage}
-                </Alert>
-            </Snackbar>
-
-            <Snackbar
-                open={!!errorMessage}
-                onClose={() => setErrorMessage(null)}
-                autoHideDuration={4000}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert severity="error" variant="filled" onClose={() => setErrorMessage(null)}>
-                    {errorMessage}
-                </Alert>
-            </Snackbar>
         </>
     )
 }

@@ -27,7 +27,10 @@ export default function BannerMap() {
 
   return (
     <>
-      <BannerMapDynamic onSelectRegion={handleSelectRegion} selectedRegion={selectedRegion} />
+      <BannerMapDynamic
+        onSelectRegion={handleSelectRegion}
+        selectedRegion={selectedRegion}
+      />
 
       {selectedRegion && (
         <div style={{ animation: 'summary-panel-in 0.2s ease' }}>

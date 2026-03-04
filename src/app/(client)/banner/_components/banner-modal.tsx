@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, type MouseEvent } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
@@ -11,9 +11,8 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import CloseIcon from '@mui/icons-material/Close'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
-import Snackbar from '@mui/material/Snackbar'
-import Alert from '@mui/material/Alert'
 import { useGetBanner } from '@/src/app/(client)/archive/_hooks/useGetBanner'
+import { useToast } from '@/src/providers/toast-provider'
 
 type BannerModalProps = {
   bannerId: string | null
@@ -28,10 +27,16 @@ function formatDate(date: Date | string): string {
 
 export default function BannerModal({ bannerId, open, onClose }: BannerModalProps) {
   const { data: banner, isLoading, isError, error } = useGetBanner(bannerId)
+  const { showError } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
   const menuOpen = Boolean(menuAnchorEl)
+
+  useEffect(() => {
+    if (!isError) return
+    showError(error instanceof Error ? error.message : '배너를 불러오지 못했습니다.')
+  }, [isError, error, showError])
 
   const handleMenuOpen = (event: MouseEvent<HTMLElement>) => {
     setMenuAnchorEl(event.currentTarget)
@@ -167,15 +172,6 @@ export default function BannerModal({ bannerId, open, onClose }: BannerModalProp
         </DialogContent>
       </Dialog>
 
-      <Snackbar
-        open={isError}
-        autoHideDuration={4000}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="error" variant="filled">
-          {error instanceof Error ? error.message : '배너를 불러오지 못했습니다.'}
-        </Alert>
-      </Snackbar>
     </>
   )
 }

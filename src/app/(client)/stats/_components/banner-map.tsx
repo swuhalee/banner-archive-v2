@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { RegionLevel, SummaryScope } from '@/src/type/stats'
 import { useGetBannerStats } from '../_hooks/useGetBannerStats'
+import { useToast } from '@/src/providers/toast-provider'
 
 // zoom 레벨에 따른 지역 단계 결정
 function resolveLevel(zoom: number): RegionLevel {
@@ -55,6 +56,7 @@ type BannerMapProps = {
 export default function BannerMap({ onSelectRegion, selectedRegion }: BannerMapProps) {
   const [level, setLevel] = useState<RegionLevel>('sido')
   const { data: stats = [], isFetching, error } = useGetBannerStats(level)
+  const { showError } = useToast()
   const loading = isFetching
   const errorMessage = error instanceof Error ? error.message : null
 
@@ -69,6 +71,11 @@ export default function BannerMap({ onSelectRegion, selectedRegion }: BannerMapP
       }),
     [stats]
   )
+
+  useEffect(() => {
+    if (!errorMessage) return
+    showError(errorMessage)
+  }, [errorMessage, showError])
 
   return (
     <div className="relative">
@@ -167,9 +174,9 @@ export default function BannerMap({ onSelectRegion, selectedRegion }: BannerMapP
         })}
       </MapContainer>
 
-      {/* 에러 */}
-      {errorMessage && (
-        <p style={{ marginTop: 8, color: '#ef4444', fontSize: 13 }}>{errorMessage}</p>
+      {/* 에러/빈 상태 안내 */}
+      {errorMessage && !loading && markers.length === 0 && (
+        <p style={{ marginTop: 8, color: 'var(--text-muted)', fontSize: 13 }}>데이터가 없습니다.</p>
       )}
 
       {/* 범례 */}

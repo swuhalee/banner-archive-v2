@@ -6,8 +6,7 @@ import { useGetBanners } from '../_hooks/useGetBanners'
 import PhotoCard from './photo-card'
 import { SUBJECT_TYPE_LABEL } from '@/src/type/banner'
 import type { SubjectType, BannerSortOption } from '@/src/type/banner'
-import Snackbar from '@mui/material/Snackbar'
-import Alert from '@mui/material/Alert'
+import { useToast } from '@/src/providers/toast-provider'
 
 export default function ArchiveBannerList() {
   const [regionText, setRegionText] = useState('')
@@ -22,12 +21,18 @@ export default function ArchiveBannerList() {
   })
 
   const { ref: sentinelRef, inView } = useInView({ threshold: 0 })
+  const { showError } = useToast()
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage()
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  useEffect(() => {
+    if (!isError) return
+    showError(error instanceof Error ? error.message : '목록을 불러오지 못했습니다.')
+  }, [isError, error, showError])
 
   const banners = data?.pages.flat() ?? []
 
@@ -91,15 +96,6 @@ export default function ArchiveBannerList() {
 
       </div>
 
-      <Snackbar
-        open={isError}
-        autoHideDuration={4000}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="error" variant="filled">
-          {error instanceof Error ? error.message : '목록을 불러오지 못했습니다.'}
-        </Alert>
-      </Snackbar>
     </>
   )
 }
