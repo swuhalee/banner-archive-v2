@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../style/globals.css";
 import Providers from "./providers";
@@ -13,9 +13,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL!),
   title: "한국 현수막 저장소",
   description: "국내 정당·정치인 현수막을 모아보는 아카이브",
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/logo.svg",
     shortcut: "/logo.svg",
@@ -35,6 +44,12 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "한국 현수막 저장소",
+    description: "국내 정당·정치인 현수막을 모아보는 아카이브",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
@@ -43,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
