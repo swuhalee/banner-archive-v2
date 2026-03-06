@@ -51,7 +51,7 @@ export async function analyzeImage(
       responseMimeType: "application/json",
       thinkingConfig: {
         // 사고 수준 최소화
-        thinkingLevel: ThinkingLevel.MINIMAL
+        thinkingLevel: ThinkingLevel.MEDIUM
       },
     },
     contents: [
