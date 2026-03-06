@@ -11,7 +11,6 @@ function getHostname(url?: string): string | null {
 
 const envHostnames = [
   getHostname(process.env.NEXT_PUBLIC_SUPABASE_URL),
-  getHostname(process.env.SUPABASE_URL),
 ].filter((hostname): hostname is string => Boolean(hostname));
 
 function getAdminPublicPath(): string {

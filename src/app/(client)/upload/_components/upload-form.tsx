@@ -6,7 +6,7 @@ import { useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import RegionSelector from './region-selector';
 
-export type FormValues = {
+export type UploadFormValues = {
   imageFile: File | null;
   regionText: string;
   observedAt: string;
@@ -16,14 +16,14 @@ export type FormValues = {
 };
 
 type UploadFormProps = {
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (data: UploadFormValues) => void;
 };
 
 const UploadForm = ({ onSubmit }: UploadFormProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const { register, control, setValue, watch, handleSubmit, formState: { isValid } } = useForm<FormValues>({
+  const { register, control, setValue, watch, handleSubmit, formState: { isValid } } = useForm<UploadFormValues>({
     mode: "onChange",
     defaultValues: {
       imageFile: null,

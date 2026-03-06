@@ -25,14 +25,19 @@ export const SUBJECT_TYPE_MAP = Object.fromEntries(
 // DB insert용 입력 타입 -> createdAt, updatedAt은 DB가 자동 생성하므로 제외하고 id는 호출부에서 직접 생성해 전달
 export type CreateBannerInput = Omit<BannerInsert, 'createdAt' | 'updatedAt'>;
 
-// POST /api/banners 요청 바디 -> 클라이언트가 서버로 전송하는 외부 입력값(imageBase64 포함, DB 컬럼과 1:1 대응하지 않음)
+// POST /api/banners 요청 바디 -> 클라이언트가 서버로 전송하는 외부 입력값(DB 컬럼과 1:1 대응하지 않음)
 export type CreateBannerRequest = {
   title: string | null;
   hashtags: string[];
   subjectType: SubjectType | null;
   regionText: string;
-  imageBase64: string;      // data:image/jpeg;base64,...
+  imageUrl: string;        // public url
   observedAt: string;       // YYYY-MM-DD
+};
+
+export type SaveBannersRequest = {
+  banners: CreateBannerRequest[];
+  cleanupImageUrls: string[];
 };
 
 // List 조회 필터
@@ -53,7 +58,7 @@ export type AnalyzedBanner = {
   hashtags: string[];
   subjectType: SubjectType | null;
   regionText: string | null;
-  image: string; // base64 (data:image/jpeg;base64,...)
+  imageUrl: string;
 };
 
 export type CandidateBanner = {
@@ -65,4 +70,9 @@ export type CandidateBanner = {
   imageUrl: string;
   observedAt: string;
   excluded: boolean;
+};
+
+export type AnalyzeBannerResult = {
+  imageKey: string;
+  candidates: CandidateBanner[];
 };
