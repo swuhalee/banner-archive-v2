@@ -58,7 +58,10 @@ export default function SubjectDist({ data }: Props) {
               background: 'var(--surface)',
               color: 'var(--text)',
             }}
-            formatter={(value: number | undefined) => [`${(value ?? 0).toLocaleString()}개`, '']}
+            formatter={(value) => {
+              const numericValue = typeof value === 'number' ? value : Number(value ?? 0)
+              return [`${(Number.isFinite(numericValue) ? numericValue : 0).toLocaleString()}개`, '']
+            }}
           />
         </PieChart>
       </ResponsiveContainer>
