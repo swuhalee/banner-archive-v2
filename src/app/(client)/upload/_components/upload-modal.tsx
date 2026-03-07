@@ -11,6 +11,8 @@ import ReviewForm from './review-form';
 import AnalysisLoading from './analysis-loading';
 import { useAnalyzeBanner } from '../_hooks/useAnalyzeBanner';
 import { useSaveBanners } from '../_hooks/useSaveBanners';
+import { applyBlurMaskClient } from '@/src/utils/image/applyBlurMaskClient';
+import { cropImageByBboxClient } from '@/src/utils/image/cropImageByBboxClient';
 import { CandidateBanner } from '@/src/type/banner';
 import { useToast } from '@/src/providers/toast-provider';
 
@@ -28,7 +30,6 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
   const { mutateAsync: save, isPending: isSaving } = useSaveBanners();
   const { showError, showSuccess } = useToast();
 
-  // 분석 결과 (Step 2에서 사용)
   const [reviewCandidates, setReviewCandidates] = useState<CandidateBanner[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [analysisFailed, setAnalysisFailed] = useState(false);
@@ -43,10 +44,15 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
     }
   }
 
+  function revokeCandidateUrls(candidates: CandidateBanner[]) {
+    candidates.forEach((c) => URL.revokeObjectURL(c.imageUrl));
+  }
+
   function handleClose() {
     onClose();
     setTimeout(() => {
       revokePreviewUrl();
+      revokeCandidateUrls(reviewCandidates);
       setPreviewUrl(null);
       setActiveStep(0);
       setAnalysisFailed(false);
@@ -54,10 +60,13 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
     }, 300);
   }
 
-  // Step 0 → Step 1: 폼 제출 후 AI 분석 시작
+  // Step 0 → Step 1: 폼 제출 후 AI 분석 + Canvas 처리
   async function handleFormSubmit(data: FormValues) {
     savedFormData.current = data;
     revokePreviewUrl();
+    revokeCandidateUrls(reviewCandidates);
+    setReviewCandidates([]);
+
     if (data.imageFile) {
       const url = URL.createObjectURL(data.imageFile);
       previewUrlRef.current = url;
@@ -65,8 +74,34 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
     }
     setActiveStep(1);
     setAnalysisFailed(false);
+
     try {
-      const candidates = await analyze(data);
+      // 1. 서버: 경량 이미지로 Gemini 분석 → 좌표만 반환
+      const analysis = await analyze(data);
+
+      // 2. 클라이언트: 원본 이미지에 블러 + 크롭 (Canvas)
+      const maskedCanvas = await applyBlurMaskClient(data.imageFile!, analysis.privacyRegions);
+      const cropped = await cropImageByBboxClient(maskedCanvas, analysis.banners);
+
+      const croppedMap = new Map(cropped.map((c) => [c.tempId, c]));
+
+      const candidates: CandidateBanner[] = analysis.banners
+        .filter((b) => croppedMap.has(b.tempId))
+        .map((b) => {
+          const crop = croppedMap.get(b.tempId)!;
+          return {
+            id: b.tempId,
+            imageUrl: crop.objectUrl,
+            imageBlob: crop.blob,
+            title: b.title ?? '',
+            hashtagsText: b.hashtags.join(', '),
+            subjectType: b.subjectType ?? data.subjectType,
+            regionText: analysis.regionText ?? data.regionText,
+            observedAt: data.observedAt,
+            excluded: false,
+          };
+        });
+
       if (candidates.length === 0) {
         showError(EMPTY_ANALYSIS_MESSAGE);
         setTimeout(handleClose, 2000);
@@ -145,7 +180,6 @@ const UploadModal = ({ open, onClose }: UploadModalProps) => {
           )}
         </DialogContent>
       </Dialog>
-
     </>
   );
 };

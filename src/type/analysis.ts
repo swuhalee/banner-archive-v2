@@ -25,3 +25,11 @@ export type AnalysisResult = {
   banners: DetectedBanner[];
   privacyRegions: BlurRegion[];
 };
+
+export type AnalyzeResult = AnalysisResult & { regionText: string | null };
+
+export type CroppedBannerClient = {
+  tempId: string;
+  blob: Blob;
+  objectUrl: string;
+};

@@ -1,7 +1,6 @@
-import { randomUUID } from 'crypto'
 import { NextRequest } from 'next/server'
 import { getBanners, createBanner } from '@/src/lib/api/banner'
-import { uploadBannerImage, deleteBannerImage } from '@/src/lib/storage/banner'
+import { deleteBannerImage } from '@/src/lib/storage/banner'
 import { apiSuccess, apiError } from '@/src/lib/api/response'
 import { ApiSuccessCode, ApiErrorCode } from '@/src/type/api'
 import type { BannerListParams, BannerSortOption, BannerStatus, SubjectType } from '@/src/type/banner'
@@ -35,23 +34,15 @@ export async function POST(request: NextRequest) {
       return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400, JSON.stringify(parsed.error.issues));
     }
 
-    // 이미지 업로드는 DB를 사용하지 않으므로 병렬 처리
-    const uploaded = await Promise.all(
-      parsed.data.map(async (item) => {
-        const newId = randomUUID();
-        const imageUrl = await uploadBannerImage(item.imageBase64, newId);
-        return { item, newId, imageUrl };
-      })
-    );
-
+    // 이미지는 클라이언트가 Supabase에 직접 업로드했으므로 DB 저장만 처리
     // SERIALIZABLE 트랜잭션 간 read-write 충돌을 방지하기 위해 순차 처리
     const results = [];
-    for (const { item, newId, imageUrl } of uploaded) {
+    for (const item of parsed.data) {
       const observedAt = new Date(item.observedAt);
       try {
         const { banner, isDuplicate } = await createBanner(
           {
-            id: newId,
+            id: crypto.randomUUID(),
             title: item.title,
             hashtags: item.hashtags,
             subjectType: item.subjectType,
@@ -59,18 +50,18 @@ export async function POST(request: NextRequest) {
             firstSeenAt: observedAt,
             lastSeenAt: observedAt,
           },
-          imageUrl,
+          item.imageUrl,
         );
 
-        // 중복 판정 시 미리 업로드한 이미지를 스토리지에서 제거
+        // 중복 판정 시 클라이언트가 업로드한 이미지를 스토리지에서 제거
         if (isDuplicate) {
-          await deleteBannerImage(newId).catch(() => {});
+          await deleteBannerImage(item.imagePath).catch(() => {});
         }
 
         results.push({ ...banner, isDuplicate });
       } catch (e) {
-        // 트랜잭션 실패 시 업로드한 이미지 롤백
-        await deleteBannerImage(newId).catch(() => {});
+        // DB 실패 시 업로드된 이미지 롤백
+        await deleteBannerImage(item.imagePath).catch(() => {});
         throw e;
       }
     }

@@ -1,3 +1,21 @@
+/**
+ * 분석용 경량 이미지 생성: 원본 File을 maxEdge 이하로 리사이즈한 base64 data URL을 반환함
+ * 원본 File은 그대로 유지됨
+ */
+export async function resizeForAnalysis(file: File, maxEdge = 1024): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return canvas.toDataURL('image/jpeg', 0.9);
+}
+
 export const convertToJPEG = async (file: File): Promise<File> => {
   let sourceFile = file;
 
