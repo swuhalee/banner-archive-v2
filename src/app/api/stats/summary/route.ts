@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { unstable_cache } from 'next/cache'
 import { and, count, eq, isNotNull, sql } from 'drizzle-orm'
 import type { SQL } from 'drizzle-orm'
 import db from '@/src/lib/db/db'
@@ -32,21 +33,12 @@ function buildRegionSqlClause(sido: string | null, sigungu: string | null, eupmy
   `
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = request.nextUrl
-    const sido = searchParams.get('sido') || null
-    const sigungu = searchParams.get('sigungu') || null
-    const eupmyeondong = searchParams.get('eupmyeondong') || null
-
-    if (sigungu && !sido) return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400, '"sigungu" query param requires "sido" to be specified')
-    if (eupmyeondong && !sigungu) return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400, '"eupmyeondong" query param requires "sigungu" to be specified')
-
+const getSummaryData = unstable_cache(
+  async (sido: string | null, sigungu: string | null, eupmyeondong: string | null): Promise<SummaryData> => {
     const regionJoin = sido ? sql`INNER JOIN regions ON banners.region_id = regions.id` : sql``
     const sqlWhere = buildRegionSqlClause(sido, sigungu, eupmyeondong)
     const joinOn = eq(banners.regionId, regions.id)
 
-    // 1. 총계
     const totalColumns = {
       totalBanners: count(),
       totalObservations: sql<number>`coalesce(sum(${banners.observedCount}), 0)::int`,
@@ -56,7 +48,6 @@ export async function GET(request: NextRequest) {
       ? db.select(totalColumns).from(banners).innerJoin(regions, joinOn).where(buildRegionCondition(sido, sigungu, eupmyeondong))
       : db.select(totalColumns).from(banners).where(eq(banners.status, 'active'))
 
-    // 2. 해시태그 TOP 10
     const hashtagsQuery = db.execute<{ hashtag: string; count: string }>(sql`
       SELECT t.hashtag, COUNT(*) AS count
       FROM banners
@@ -69,12 +60,10 @@ export async function GET(request: NextRequest) {
       LIMIT 10
     `)
 
-    // 3. 주체 유형 분포
     const subjectQuery = sido
       ? db.select({ type: banners.subjectType, count: count() }).from(banners).innerJoin(regions, joinOn).where(and(buildRegionCondition(sido, sigungu, eupmyeondong), isNotNull(banners.subjectType))).groupBy(banners.subjectType)
       : db.select({ type: banners.subjectType, count: count() }).from(banners).where(and(eq(banners.status, 'active'), isNotNull(banners.subjectType))).groupBy(banners.subjectType)
 
-    // 4. 월별 추이 (최근 12개월)
     const trendQuery = db.execute<{ month: string; count: string }>(sql`
       SELECT
         TO_CHAR(DATE_TRUNC('month', banners.first_seen_at), 'YYYY-MM') AS month,
@@ -88,14 +77,13 @@ export async function GET(request: NextRequest) {
       ORDER BY month
     `)
 
-    const [[totals], hashtagRows, subjectRows, trendRows] = await Promise.all([
-      totalsQuery,
-      hashtagsQuery,
-      subjectQuery,
-      trendQuery,
-    ])
+    // max: 1 (serverless 커넥션 제한)로 인해 실제로는 직렬 실행됨
+    const [totals] = await totalsQuery
+    const hashtagRows = await hashtagsQuery
+    const subjectRows = await subjectQuery
+    const trendRows = await trendQuery
 
-    return apiSuccess<SummaryData>({
+    return {
       totalBanners: totals?.totalBanners ?? 0,
       totalObservations: totals?.totalObservations ?? 0,
       regionCount: totals?.regionCount ?? 0,
@@ -105,7 +93,26 @@ export async function GET(request: NextRequest) {
         count: r.count,
       })),
       monthlyTrend: trendRows.map((r) => ({ month: r.month, count: Number(r.count) })),
-    })
+    }
+  },
+  ['stats-summary'],
+  { revalidate: 300, tags: ['stats-summary'] },
+)
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl
+    const sido = searchParams.get('sido') || null
+    const sigungu = searchParams.get('sigungu') || null
+    const eupmyeondong = searchParams.get('eupmyeondong') || null
+
+    if (sigungu && !sido) return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400, '"sigungu" query param requires "sido" to be specified')
+    if (eupmyeondong && !sigungu) return apiError(ApiErrorCode.BAD_REQUEST, '잘못된 요청입니다.', 400, '"eupmyeondong" query param requires "sigungu" to be specified')
+
+    const data = await getSummaryData(sido, sigungu, eupmyeondong)
+    const response = apiSuccess<SummaryData>(data)
+    response.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+    return response
   } catch (e) {
     return apiError(ApiErrorCode.INTERNAL_ERROR, '서버 오류가 발생했습니다.', 500, e instanceof Error ? e.message : String(e))
   }

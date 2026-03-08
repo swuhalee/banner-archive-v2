@@ -88,7 +88,9 @@ export const images = pgTable('images', {
         .references(() => banners.id, { onDelete: 'cascade' }),
     imageUrl: text('image_url').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-})
+}, (table) => [
+    index('images_banner_id_created_at_idx').on(table.bannerId, table.createdAt),
+])
 
 export const reports = pgTable('reports', {
     id: uuid('id').primaryKey().notNull().default(sql`gen_random_uuid()`),
